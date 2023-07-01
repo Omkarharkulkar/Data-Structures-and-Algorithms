@@ -42,6 +42,8 @@ The following algorithms are currently implemented:
   - Merge Sort
   - Quick Sort
   - Heap sort
+  - Radix Sort
+  - Bubble Sort
 - Searching Algorithms
   - Linear Search
   - Binary Search
