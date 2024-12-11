@@ -1,55 +1,113 @@
 #include <iostream>
-#include <vector>
-#include <algorithm>
+#include <cstring>
 using namespace std;
 
-bool checkRoyalFlush(const vector<int>& hand, int index, int suit) {
-    if (index == 5) {
-        return true;  // Base case: all 5 cards found in the same suit
+// Constants
+const int STACK_SIZE = 5;
+const string ROYAL_FLUSH_CARDS[5] = {"10", "J", "Q", "K", "A"};
+
+// Stack ADT using an array
+struct Stack {
+    string cards[STACK_SIZE];
+    int top;
+
+    // Initialize the stack
+    void init() {
+        top = -1;
     }
 
-    // Check if the current card matches the suit and rank of a Royal Flush card
-    if (hand[index] == suit && (hand[index + 1] == 10 || hand[index + 1] == 11 ||
-                                hand[index + 1] == 12 || hand[index + 1] == 13 ||
-                                hand[index + 1] == 14)) {
-        return checkRoyalFlush(hand, index + 1, suit);  // Recursively check the next card
+    // Push a card onto the stack
+    bool push(string card) {
+        if (top >= STACK_SIZE - 1) {
+            cout << "Stack overflow! Too many cards." << endl;
+            return false;
+        }
+        cards[++top] = card;
+        return true;
     }
 
-    return false;  // No Royal Flush found
+    // Pop a card from the stack
+    string pop() {
+        if (top < 0) {
+            cout << "Stack underflow! No cards to pop." << endl;
+            return "";
+        }
+        return cards[top--];
+    }
+
+    // Check if the stack is empty
+    bool isEmpty() {
+        return top == -1;
+    }
+
+    // Get the top card of the stack
+    string peek() {
+        if (top >= 0)
+            return cards[top];
+        return "";
+    }
+};
+
+// Function to check if a card exists in the hand (recursive)
+bool containsCard(string hand[], string suit[], int size, string card, string requiredSuit) {
+    if (size == 0) return false; // Base case: empty hand
+    if (hand[size - 1] == card && suit[size - 1] == requiredSuit) return true; // Card found
+    return containsCard(hand, suit, size - 1, card, requiredSuit); // Recursive call
 }
 
-bool hasRoyalFlush(const vector<int>& hand) {
-    // Sort the hand in ascending order
-    vector<int> sortedHand = hand;
-    sort(sortedHand.begin(), sortedHand.end());
-
-    // Check for a Royal Flush in each suit
-    for (int suit = 1; suit <= 4; ++suit) {
-        if (checkRoyalFlush(sortedHand, 0, suit)) {
-            return true;  // Royal Flush found
-        }
+// Function to check if the hand is a Royal Flush
+bool isRoyalFlush(string hand[], string suit[], int size, string requiredSuit, Stack &stack) {
+    if (stack.isEmpty()) return true; // Base case: All cards in the Royal Flush are found
+    string card = stack.pop(); // Get the top card to check
+    if (!containsCard(hand, suit, size, card, requiredSuit)) {
+        return false; // Card not found in the required suit
     }
-
-    return false;  // No Royal Flush found in any suit
+    return isRoyalFlush(hand, suit, size, requiredSuit, stack); // Recursive check for remaining cards
 }
 
 int main() {
-    vector<int> hand;
-    int card;
+    int numCards;
+    string requiredSuit;
 
-    // Input five cards from the user
-    cout << "Enter five cards (10-14) in any order: " << endl;
-    for (int i = 0; i < 5; ++i) {
-        cout << "Card " << (i + 1) << ": ";
-        cin >> card;
-        hand.push_back(card);
+    // Input number of cards in the hand
+    cout << "Enter the number of cards in your hand: ";
+    cin >> numCards;
+
+    // Input cards and their suits
+    string *hand = new string[numCards];
+    string *suit = new string[numCards];
+
+    cout << "Enter the cards and their suits (e.g., 10 Hearts):" << endl;
+    for (int i = 0; i < numCards; i++) {
+        cout << "Card " << i + 1 << ": ";
+        cin >> hand[i] >> suit[i];
     }
 
-    if (hasRoyalFlush(hand)) {
-        cout << "Congratulations! You have a Royal Flush!" << endl;
+    // Input the required suit for the Royal Flush
+    cout << "Enter the suit you want to check for the Royal Flush: ";
+    cin >> requiredSuit;
+
+    // Initialize the stack with Royal Flush cards
+    Stack stack;
+    stack.init();
+    for (int i = 0; i < 5; i++) {
+        stack.push(ROYAL_FLUSH_CARDS[i]);
+    }
+
+    // Check for Royal Flush
+    bool result = isRoyalFlush(hand, suit, numCards, requiredSuit, stack);
+
+    // Output results
+    cout << "\nResult: ";
+    if (result) {
+        cout << "Congratulations! You have a Royal Flush in " << requiredSuit << "." << endl;
     } else {
-        cout << "Sorry, no Royal Flush in this hand." << endl;
+        cout << "No Royal Flush found in " << requiredSuit << "." << endl;
     }
+
+    // Clean up
+    delete[] hand;
+    delete[] suit;
 
     return 0;
 }
